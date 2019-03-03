@@ -1,213 +1,212 @@
-import javax.lang.model.element.NestingKind;
 import java.io.*;
-import java.lang.reflect.Array;
 import java.util.ArrayList;
-import java.util.EnumMap;
 import java.util.List;
-import java.util.StringTokenizer;
 
 public class DataBase {
 
-    static Course[] course = new Course[5];
-    static Student[] stu = new Student[34];
-    static SC[] sc = new SC[9];
-
     public static void main(String args[]) throws IOException {
-        /*将学生信息从txt文件中读入*/
-//        FileReader fr = new FileReader(new File("student.txt"));
-        BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream("student.txt"), "gbk"));
-        String str = null;
+        List<Student> studentList = inputStudentInfo(new File("student.txt"));
+        List<Course> courseList = inputCourseInfo(new File("course.txt"));
+        List<SC> scList = inputSCInfo(new File("sc.txt"));
 
-//        Student[] stu = new Student[34];
-        int student_num = 0;
-        for (int i = 0; ; i++)
-        {
+
+        /*检索选修数据库原理课程的学生学号，姓名和成绩*/
+        String info = "数据库原理";
+        Course coursetemp = SelectCourseByCname(courseList, info).get(0);//得到课程号
+        List<SC> sctemp = SelectSCByCno(scList, coursetemp.getCno());//得到学生学号信息
+
+
+        System.out.println("选修数据库原理的学生信息");
+
+//        List<Student> stutemp = new ArrayList<Student>();
+
+        for (SC x : sctemp) {
+            Student temp = SelectStuBySno(studentList, x.getSno()).get(0);
+
+            System.out.println(x);
+            System.out.println(temp);
+            System.out.println();
+        }
+
+        /*检索刘明同学不学的课程号,课程名，学分*/
+        String name = "刘明";
+        /*检索学生学号*/
+        String stunum = SelectSnoBySname(studentList, name);
+        /*检索学生选修课程*/
+        List<SC> SCTEMP = selectSCBySno(scList, stunum);
+
+        System.out.println("刘明同学不学的课程信息如下");
+
+        List<Course> cc = selectCourseBySC(courseList, SCTEMP);
+        for (Course x : cc) {
+            System.out.println(x);
+            System.out.println();
+        }
+
+    }
+
+    public static List<Student> inputStudentInfo(File file) throws IOException {
+
+        /*将学生信息从txt文件中读入*/
+        BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(file), "gbk"));
+
+        List<Student> studentList = new ArrayList<Student>();
+
+        for (int i = 0; ; i++) {
             String string = br.readLine();
-            if (string.equals(""))
-            {
+            if (string == null || string.equals("")) {
                 break;
             }
             String[] retval = string.split("\\s+");//将数据切割，按空格分开
             //将学生数据存入
-            stu[i] = new Student();//空指针问题
-            stu[i].setSno(retval[0]);
-            stu[i].setSname(retval[1]);
-            stu[i].setAge(retval[2]);
-            stu[i].setSex(retval[3]);
-            stu[i].setSdept(retval[4]);
-            student_num++;
-        }
+            Student stu = new Student();//空指针问题
 
+            stu.setSno(retval[0]);
+            stu.setSname(retval[1]);
+            stu.setAge(retval[2]);
+            stu.setSex(retval[3]);
+            stu.setSdept(retval[4]);
+
+            studentList.add(stu);
+        }
+        br.close();
+        return studentList;
+    }
+
+    public static List<Course> inputCourseInfo(File file) throws IOException {
 
         /*将课程信息从txt文件中读入*/
-//        FileReader fr1 = new FileReader(new File("course.txt"));
-        BufferedReader br1 = new BufferedReader(new InputStreamReader(new FileInputStream("course.txt"), "gbk"));
-        String str1 = null;
-//        Course[] course = new Course[5];
-        int course_num = 0;//课程数目
-        for (int i = 0; ; i++)
-        {
+        BufferedReader br1 = new BufferedReader(new InputStreamReader(new FileInputStream(file), "gbk"));
+
+        List<Course> courseList = new ArrayList<Course>();
+
+        for (int i = 0; ; i++) {
             String string = br1.readLine();
-            if (string.equals(""))
-            {
+            if (string == null || string.equals("")) {
                 break;
             }
             String[] retval1 = string.split("\\s+");//将数据切割，按空格分开
             // 将课程数据存入
-            course[i] = new Course();
-            course[i].setCno(retval1[0]);
-            course[i].setCname(retval1[1]);
-            course[i].setCredit(retval1[2]);
-            course_num++;
-        }
-        System.out.println("共有课程数" + course_num);
+            Course course = new Course();
+            course.setCno(retval1[0]);
+            course.setCname(retval1[1]);
+            course.setCredit(retval1[2]);
 
+            courseList.add(course);
+        }
+//        System.out.println("共有课程数" + course_num);
+        br1.close();
+        return courseList;
+
+    }
+
+    public static List<SC> inputSCInfo(File file) throws IOException {
 
         /*将选课信息从txt文件中读入*/
-//        FileReader fr2 = new FileReader(new File("c:/sc.txt"));
-        BufferedReader br2 = new BufferedReader(new InputStreamReader(new FileInputStream("sc.txt"), "gbk"));
-        String str2 = null;
-
-//        SC[] sc = new SC[9];
-        int sc_num = 0;
-        for (int i = 0; ; i++)
-        {
+        BufferedReader br2 = new BufferedReader(new InputStreamReader(new FileInputStream(file), "gbk"));
+        List<SC> scList = new ArrayList<SC>();
+        for (int i = 0; ; i++) {
             String string = br2.readLine();
-            if (string == null || string.equals(""))
-            {
+            if (string == null || string.equals("")) {
                 break;
             }
 
             String[] retval2 = string.split("\\s+");//将数据切割，按空格分开
             //将学生选课数据存入
-            sc[i] = new SC();
-            sc[i].setSno(retval2[0]);
-            sc[i].setCno(retval2[1]);
-            sc[i].setGrade(retval2[2]);
-            sc_num++;
-        }
-        System.out.println("选课记录有" + sc_num);
-        /*检索选修数据库原理课程的学生学号，姓名和成绩*/
-        String ifo = "数据库原理";
-        Course coursetemp = SelectCourseByCname(ifo, course_num);//得到课程号
-        String[] strtemp = SelectSCByCno(coursetemp.getCno(), sc_num);//得到学生学号信息
-        String[] stemp = SelectGrade(coursetemp.getCno(), sc_num);
-        System.out.println("选修数据库原理的学生信息");
-        for (String ss : strtemp)
-        {
-            for (String aa : stemp)
-            {
-                Student stutemp = SelectStuBySno(ss, student_num);
-                System.out.println("学号：" + stutemp.getSno() + "姓名：" + stutemp.getSname() + "成绩" + aa);
-            }
-        }
-        /*检索刘明同学不学的课程号,课程名，学分*/
-//        String name = "刘明";
-//        int[] flag = new int[4];
-//        int count = 0;
-//        for (int i = 0; i < student_num; i++) {
-//            if (name.equals(stu[i].getSname())) {
-//                for (int j = 0; j < sc_num; j++) {
-//                    if (stu[i].getSno().equals(sc[j].getSno())) {
-//                        for (int k = 0; k < course_num; k++) {
-//                            if (sc[j].getCno().equals(course[k].getCno())) {
-//                                flag[i] = k;//记录下刘明选修的课程的下标
-//                                count++;//记录刘明学的课程数
-//                            }
-//                        }
-//                    }
-//                }
-//            }
-//        }
-//        System.out.print("刘明不学的课程信息：");
-//        for (int i = 0; i < course_num; i++) {
-//            for (int j = 0; j < count; j++) {
-//                if (flag[j] != i) {
-//                    System.out.print("课程号：" + course[i].getCno() + "课程名：" + course[i].getCname() + "学分：" + course[i].getCredit());
-//                    System.out.println();
-//                } else {
-//                    break;
-//                }
-//            }
-//        }
+            SC sc = new SC();
 
+            sc.setSno(retval2[0]);
+            sc.setCno(retval2[1]);
+            sc.setGrade(retval2[2]);
 
-//        fr.close();
-        br.close();
-//        fr1.close();
-        br1.close();
-//        fr2.close();
+            scList.add(sc);
+        }
+
+//        System.out.println("选课记录有" + sc_num);
         br2.close();
+        return scList;
     }
 
-    public static Course SelectCourseByCname(String Cname, int course_num) {
+    public static List<Course> SelectCourseByCname(List<Course> courseList, String Cname) {
+
         /*通过课程名在课程信息表中找到课程号*/
-//        Course[] course = new Course[5];
-        for (int i = 0; i < course_num; i++)
-        {
-//            course[i] = new Course();
-            if (Cname.equals(course[i].getCname()))
-            {
-                return course[i];
+
+        List<Course> temp = new ArrayList<Course>();
+
+
+        for (Course x : courseList) {
+            if (Cname.equals(x.getCname())) {
+                temp.add(x);
+            }
+        }
+        return temp;
+    }
+
+    public static List<SC> SelectSCByCno(List<SC> scList, String Cno) {
+
+        /*通过课程号在选课信息表中找到选课的学生成绩*/
+
+        List<SC> temp = new ArrayList<SC>();
+
+        for (SC x : scList) {
+            if (Cno.equals(x.getCno())) {
+                temp.add(x);
+            }
+        }
+        return temp;
+    }
+
+    public static List<Student> SelectStuBySno(List<Student> studentList, String Sno) {
+        /*通过学号在学生信息表找到学生信息*/
+        List<Student> temp = new ArrayList<Student>();
+
+        for (Student x : studentList) {
+            if (Sno.equals(x.getSno())) {
+                temp.add(x);
+            }
+        }
+
+
+        return temp;
+    }
+
+    public static String SelectSnoBySname(List<Student> studentList, String name) {
+        /*通过学生姓名找到学生学号*/
+        String temp = new String();
+        for (Student x : studentList) {
+            if (name.equals(x.getSname())) {
+                temp = x.getSno();
+                return temp;
             }
         }
         return null;
     }
 
+    public static List<SC> selectSCBySno(List<SC> scList, String sno) {
+        /*通过学生学号找到学生选修的课程*/
+        List<SC> temp = new ArrayList<SC>();
+        for (SC x : scList) {
+            if (sno.equals(x.getSno())) {
+                temp.add(x);
+            }
+        }
+        return temp;
+    }
 
-    public static String[] SelectSCByCno(String Cno, int sc_num) {
-        /*通过课程号在选课信息表中找到选课的学生学号*/
-        if (Cno == null)
-        {
-            return null;
-        } else
-        {
-//            SC[] sc = new SC[8];
-            String[] str = new String[10];
-            for (int i = 0; i < sc_num; i++)
-            {
-//                sc[i] = new SC();
-                if (Cno.equals(sc[i].getCno()))
-                {
-                    str[i] = sc[i].getSno();//将学生学号保存到临时数组里
-                } else
-                {
-                    return null;
+    public static List<Course> selectCourseBySC(List<Course> courseList, List<SC> scList) {
+        //遍历将已知学生选课表中课程与课程表中信息比较，将不同的课程（即学生未选的课）存入临时表中并返回
+        // 把原表学了的去掉
+        List<Course> temp = courseList.subList(0, courseList.size());
+
+        for (int i = 0; i < courseList.size(); i++) {
+            for (int j = 0; j < scList.size(); j++) {
+                if (courseList.get(i).getCno().equals(scList.get(j).getCno())) {
+                    temp.remove(courseList.get(i));
                 }
             }
-            return str;
         }
 
-    }
 
-    public static String[] SelectGrade(String Cno, int sc_num) {
-        /*通过课程号在选课信息表中找到选课的学生成绩*/
-        SC[] sc = new SC[8];
-        String[] str = new String[10];
-        for (int i = 0; i < sc_num; i++)
-        {
-            sc[i] = new SC();
-            if (Cno.equals(sc[i].getCno()))
-            {
-                str[i] = sc[i].getGrade();//将学生成绩保存到临时数组里
-            } else
-            {
-                return null;
-            }
-        }
-        return str;
-    }
-
-    public static Student SelectStuBySno(String Sno, int student_num) {
-        Student[] stu = new Student[6];
-        for (int i = 0; i < student_num; i++)
-        {
-            stu[i] = new Student();
-            if (Sno.equals(stu[i].getSno()))
-            {
-                return stu[i];
-            }
-        }
-        return null;
+        return temp;
     }
 }
